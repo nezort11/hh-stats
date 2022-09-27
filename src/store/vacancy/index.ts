@@ -1,13 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
+import { persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 
-export interface VacancyState {
-  queries: string[];
+export interface Vacancy {
+  query: string;
+  count?: number;
 }
 
-const initialState: VacancyState = {
-  queries: [],
-};
+export interface VacancyState {
+  vacancies?: Vacancy[];
+}
+
+const initialState: VacancyState = {};
 
 export const vacancySlice = createSlice({
   name: "vacancy",
@@ -20,9 +25,23 @@ export const vacancySlice = createSlice({
       ...state,
       ...action.payload,
     }),
+    pushVacanciesState: (
+      state: VacancyState,
+      action: PayloadAction<Vacancy>
+    ) => ({
+      ...state,
+      vacancies: [...(state.vacancies ?? []), action.payload],
+    }),
   },
 });
 
-export const { updateVacancyState } = vacancySlice.actions;
+export const { updateVacancyState, pushVacanciesState } = vacancySlice.actions;
 
-export const vacancyReducer = vacancySlice.reducer;
+export const vacancyReducer = persistReducer(
+  {
+    key: "vacancy",
+    storage,
+    whitelist: ["vacancies"],
+  },
+  vacancySlice.reducer
+);

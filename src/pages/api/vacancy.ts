@@ -1,8 +1,8 @@
 import { getHhVacancyUrl } from "../../utils/index";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { HttpMethod } from "utils";
-import axios from "axios";
 import { JSDOM } from "jsdom";
+import { client } from "client";
 
 type Data = {
   count: number;
@@ -22,7 +22,7 @@ export default async function vacancy(
     {
       [HttpMethod.Get]: async () => {
         try {
-          const { data } = await axios.get(getHhVacancyUrl(query), {
+          const { data } = await client.get(getHhVacancyUrl(query), {
             headers: {
               accept: "text/html",
             },

@@ -1,4 +1,14 @@
 import { createAction } from "@reduxjs/toolkit";
 import { VacancyActionType } from "./actionTypes";
 
-export const getVacancy = createAction(VacancyActionType.GetVacancy);
+interface GetVacancyPayload {
+  query: string;
+}
+
+export const addVacancy = createAction<GetVacancyPayload>(
+  VacancyActionType.AddVacancy
+);
+
+export const getVacancy = createAction<GetVacancyPayload>(
+  VacancyActionType.GetVacancy
+);
