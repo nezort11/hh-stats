@@ -10,25 +10,71 @@ import {
 } from "@mui/material";
 import { useShallowSelector } from "hooks/useShallowSelector";
 import type { NextPage } from "next";
-import { ChangeEvent, useCallback, useState } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { addVacancy } from "store/vacancy/actions";
+import { addVacancy, getVacancies } from "store/vacancy/actions";
 import { vacancySelector } from "store/vacancy/selectors";
 import { FontWeight } from "styles";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { statusSelector } from "store/status/selectors";
+import { ActionType } from "store/actionTypes";
+import { RequestStatus } from "store/status";
+
+export enum QueryFormInput {
+  Query = "query",
+}
+
+export interface QueryForm {
+  query: string;
+}
 
 const Home: NextPage = () => {
-  const [query, setQuery] = useState("");
   const dispatch = useDispatch();
   const { vacancies } = useShallowSelector(vacancySelector);
-
-  const handleQueryChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value),
-    []
+  const { [ActionType.GetVacancies]: getVacanciesStatus } =
+    useShallowSelector(statusSelector);
+  const shouldShowSkeletons = useMemo(
+    () => getVacanciesStatus !== RequestStatus.Success,
+    [getVacanciesStatus]
   );
 
-  const handleAddVacancy = useCallback(() => {
-    dispatch(addVacancy({ query }));
-  }, [dispatch, query]);
+  useEffect(() => {
+    dispatch(getVacancies());
+  }, [dispatch]);
+
+  const schema = useMemo(
+    () =>
+      yup
+        .object({
+          [QueryFormInput.Query]: yup
+            .string()
+            .trim()
+            .required()
+            .notOneOf(vacancies?.map(({ query }) => query) ?? []),
+        })
+        .required(),
+    [vacancies]
+  );
+
+  const {
+    register,
+    handleSubmit,
+    formState: { isDirty, isValid },
+    reset,
+  } = useForm<QueryForm>({
+    resolver: yupResolver(schema),
+    mode: "onChange",
+  });
+
+  const handleAddVacancy: Parameters<typeof handleSubmit>[0] = useCallback(
+    (data) => {
+      dispatch(addVacancy({ query: data.query }));
+      reset();
+    },
+    [dispatch, reset]
+  );
 
   return (
     <Container sx={{ paddingY: 4 }}>
@@ -48,25 +94,36 @@ const Home: NextPage = () => {
           <CardContent
             sx={{ display: "flex", justifyContent: "space-between" }}
           >
-            <Box sx={{ fontWeight: FontWeight.Medium }}>&quot;Abc&quot;</Box>
+            <Box sx={{ fontWeight: FontWeight.Medium }}>
+              &#171;{query}&#187;
+            </Box>
             <Box>
-              <Skeleton sx={{ width: 32 }} />
+              {shouldShowSkeletons ? (
+                <Skeleton sx={{ width: 32 }} />
+              ) : (
+                <Typography>{count?.toLocaleString()}</Typography>
+              )}
             </Box>
           </CardContent>
         </Card>
       ))}
 
-      <Box sx={{ marginBottom: 2, display: "flex", alignItems: "center" }}>
+      <Box
+        component="form"
+        sx={{ marginBottom: 2, display: "flex", alignItems: "center" }}
+        onSubmit={handleSubmit(handleAddVacancy)}
+      >
         <TextField
+          {...register(QueryFormInput.Query, {})}
           variant="outlined"
           label="Query"
-          onChange={handleQueryChange}
+          autoComplete="off"
           sx={{ marginRight: 2 }}
         />
         <Button
           variant="contained"
-          onClick={handleAddVacancy}
-          disabled={!query}
+          type="submit"
+          disabled={!isDirty || !isValid}
         >
           Add
         </Button>

@@ -12,3 +12,7 @@ export const addVacancy = createAction<GetVacancyPayload>(
 export const getVacancy = createAction<GetVacancyPayload>(
   VacancyActionType.GetVacancy
 );
+
+export const getVacancies = createAction(
+  VacancyActionType.GetVacancies
+);

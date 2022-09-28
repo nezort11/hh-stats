@@ -30,8 +30,9 @@ export default async function vacancy(
 
           const { document } = new JSDOM(data).window;
 
-          const vacancyText = document.querySelector(VACANCY_BLOCK_SELECTOR)
-            ?.firstChild?.textContent;
+          const vacancyText = document
+            .querySelector(VACANCY_BLOCK_SELECTOR)
+            ?.firstChild?.textContent?.replace(/\s+/g, "");
           const vacancyCount = parseInt(vacancyText || "0") || 0;
 
           res.status(200).json({ count: vacancyCount });

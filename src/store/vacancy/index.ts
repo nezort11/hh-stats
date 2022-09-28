@@ -41,7 +41,7 @@ export const vacancyReducer = persistReducer(
   {
     key: "vacancy",
     storage,
-    whitelist: ["vacancies"],
+    // whitelist: ["vacancies"],
   },
   vacancySlice.reducer
 );

@@ -1,6 +1,6 @@
 import { fork } from "redux-saga/effects";
 import { watchVacancySagas } from "./vacancy/sagas";
 
-export function* watchSagas() {
+export function* rootSaga() {
   yield fork(watchVacancySagas);
 }
